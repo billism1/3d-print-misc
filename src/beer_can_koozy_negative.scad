@@ -8,16 +8,16 @@ show_koozy       = false;  // true = full koozy body; false = negative only
 
 can_od           = 66.0;  // mm – nominal 12 oz can outer diameter
 can_h            = 122.0; // mm – nominal 12 oz can height
-radial_clearance = 0.2;   // mm – added to radius; snug sliding fit
+radial_clearance = 0.4;   // mm – added to radius; snug sliding fit
 bottom_clearance = 1.5;   // mm – extra depth below can bottom (accounts for base dome)
 dome_d           = 38.0;  // mm – diameter of inset dome on can base
 dome_h           = 5.0;   // mm – depth of dome recess needed
 bottom_fillet_r  = 4.0;   // mm – radius of rounded bottom edge on main bore
 
 wall             = 2.0;   // mm – radial wall and floor thickness
-koozy_h          = 118.0; // mm – total koozy outer height
+koozy_h          = 108.0; // mm – total koozy outer height
 outer_fillet_r   = 6.0;   // mm – radius of rounded outer bottom edge
-bottom_hole_d    = 12.0;  // mm – centre drain hole through koozy floor (0 = none)
+bottom_hole_d    = 20.0;  // mm – centre drain hole through koozy floor (0 = none)
 
 $fn = 180;
 
