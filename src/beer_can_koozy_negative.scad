@@ -4,6 +4,8 @@
 // Sized for a standard 12 oz (355 ml) aluminium can.
 
 // ── Parameters ────────────────────────────────────────────────────────────────
+show_koozy       = false;  // true = full koozy body; false = negative only
+
 can_od           = 66.0;  // mm – nominal 12 oz can outer diameter
 can_h            = 122.0; // mm – nominal 12 oz can height
 radial_clearance = 0.2;   // mm – added to radius; snug sliding fit
@@ -16,7 +18,6 @@ wall             = 2.0;   // mm – radial wall and floor thickness
 koozy_h          = 118.0; // mm – total koozy outer height
 outer_fillet_r   = 6.0;   // mm – radius of rounded outer bottom edge
 bottom_hole_d    = 12.0;  // mm – centre drain hole through koozy floor (0 = none)
-show_koozy       = true;  // true = full koozy body; false = negative only
 
 $fn = 180;
 
