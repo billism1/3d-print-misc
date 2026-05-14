@@ -12,7 +12,7 @@ dome_d           = 38.0;  // mm – diameter of inset dome on can base
 dome_h           = 5.0;   // mm – depth of dome recess needed
 bottom_fillet_r  = 4.0;   // mm – radius of rounded bottom edge on main bore
 
-$fn = 64;
+$fn = 164;
 
 // ── Derived ───────────────────────────────────────────────────────────────────
 cutout_d = can_od + 2 * radial_clearance;
