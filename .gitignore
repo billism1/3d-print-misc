@@ -1,0 +1,32 @@
+# OS noise
+.DS_Store
+Thumbs.db
+
+# IDE/editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs / temp
+*.log
+*.tmp
+*.temp
+~$*
+
+# Generic archive outputs
+*.zip
+*.7z
+*.rar
+
+# Slicer / CAD transient caches (safe defaults)
+*.cache
+*.bak
+*.old
+*.autosave
+
+# Common accidental exports (keep final release exports intentionally)
+# Uncomment if you want to ignore generated mesh exports by default:
+# *.stl
+# *.obj
+# *.3mf

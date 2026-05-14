@@ -1,0 +1,14 @@
+* text=auto
+
+# Treat common 3D model/project formats as binary
+*.stl binary
+*.3mf binary
+*.obj binary
+*.step binary
+*.stp binary
+*.f3d binary
+*.f3z binary
+*.blend binary
+*.amf binary
+*.iges binary
+*.igs binary
