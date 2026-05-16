@@ -41,7 +41,7 @@ include <trophy_base_ogee_minimal.scad>
 //    of — sourced from the included base's `base_width`.
 ref = base_width;
 
-stem_d      = ref * 0.20;   // stem diameter at the base platform
+stem_d      = ref * 0.25;   // stem diameter at the base platform
 stem_h      = ref * 0.10;   // straight stem height
 
 flare_h     = ref * 0.75;   // height of the bowl's flared foot
