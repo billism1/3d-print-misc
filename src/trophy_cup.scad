@@ -3,25 +3,44 @@
 // sitting on an interchangeable trophy base.
 //
 // Base selection: exactly ONE base file is `include`d below. `include`
-// renders the base geometry AND exposes its `total_height` and
-// `base_width`. The cup sits on `total_height` and its proportions scale
-// from `base_width`, so swapping bases keeps the trophy proportional.
-// To switch bases, comment the active line and uncomment another.
+// renders the base geometry AND exposes its top-level variables to this
+// file. To switch bases, comment the active line and uncomment another.
+//
+// Dimensions exposed by every base file (use these to scale the cup):
+//   base_width    mm  — bottom footprint (square side, or diameter for
+//                       scotia). The cup's proportions all derive from
+//                       this via `ref` below. PRIMARY design input.
+//   total_height  mm  — overall base height. The cup is lifted by this so
+//                       it lands on the base's top platform. REQUIRED for
+//                       placement; never hard-code it.
+//
+// Extra dimension exposed only by trophy_base_scotia.scad:
+//   top_width     mm  — diameter of the platform the cup actually sits on.
+//
+// Caution: `base_width` is the BOTTOM footprint, wider than the top
+// platform the stem rests on. The cup keeps `bowl_d` under `base_width`
+// for visual balance, but the stem must fit the (smaller) platform:
+//   - ogee bases  -> platform side  = 2 * hw4
+//   - scotia base -> platform diam. = top_width
+// Keep `stem_d` below that platform size when retuning proportions.
 
+// Select the desiged base by including its file here:
 include <trophy_base_ogee_minimal.scad>
-// include <trophy_base_ogee.scad>
-// include <trophy_base_scotia.scad>
+//include <trophy_base_ogee.scad>
+//include <trophy_base_scotia.scad>
 
 // 1. Constants & parameters
 //    Cup proportions scale from the base footprint so any base fits.
+//    `ref` is the single design dimension every cup feature is a fraction
+//    of — sourced from the included base's `base_width`.
 ref = base_width;
 
 stem_d      = ref * 0.20;   // stem diameter at the base platform
-stem_h      = ref * 0.42;   // straight stem height
+stem_h      = ref * 0.10;   // straight stem height
 
-flare_h     = ref * 0.30;   // height of the bowl's flared foot
+flare_h     = ref * 0.50;   // height of the bowl's flared foot
 bowl_d      = ref * 0.78;   // outer rim diameter (kept under base_width)
-bowl_wall_h = ref * 0.62;   // straight bowl wall above the flare
+bowl_wall_h = ref * 0.32;   // straight bowl wall above the flare
 
 wall        = 3;            // mm, bowl wall thickness (print constraint)
 bowl_floor  = ref * 0.10;   // solid thickness between the flare and cavity
