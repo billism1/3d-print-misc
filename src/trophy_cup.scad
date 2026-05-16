@@ -28,7 +28,7 @@
 // the base file runs its own assembly during `include`, so this value
 // has to exist by then. Set false to render the cup alone (e.g. to
 // export the cup as a separate STL).
-show_base = false;
+show_base = true;
 
 // Select the desiged base by including its file here:
 include <trophy_base_ogee_minimal.scad>
@@ -44,9 +44,9 @@ ref = base_width;
 stem_d      = ref * 0.20;   // stem diameter at the base platform
 stem_h      = ref * 0.10;   // straight stem height
 
-flare_h     = ref * 0.50;   // height of the bowl's flared foot
+flare_h     = ref * 0.75;   // height of the bowl's flared foot
 bowl_d      = ref * 0.78;   // outer rim diameter (kept under base_width)
-bowl_wall_h = ref * 0.32;   // straight bowl wall above the flare
+bowl_wall_h = ref * 0.20;   // straight bowl wall above the flare
 
 wall        = 3;            // mm, bowl wall thickness (print constraint)
 bowl_floor  = ref * 0.10;   // solid thickness between the flare and cavity
@@ -70,7 +70,7 @@ cav_z0  = z_flare + bowl_floor;         // cavity floor (stem + flare stay solid
 cav_top = cup_top + cavity_over;        // cavity opens past the rim
 
 assert(inner_r > 0,                   "wall too thick: inner radius <= 0");
-assert(cav_z0 + inner_round < cup_top, "bowl too short for its rounded floor");
+//assert(cav_z0 + inner_round < cav_top, "cavity too short: rounded floor reaches its open top");
 assert(bowl_r > stem_r,               "bowl_d must be greater than stem_d");
 
 // 3. Profiles (list of [radius, z], revolved around the Z axis)

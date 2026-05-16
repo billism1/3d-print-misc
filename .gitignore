@@ -30,3 +30,6 @@ Thumbs.db
 # *.stl
 # *.obj
 # *.3mf
+
+# Claude Code local (per-machine) settings
+.claude/settings.local.json
