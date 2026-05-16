@@ -49,11 +49,11 @@ bowl_d      = ref * 0.78;   // outer rim diameter (kept under base_width)
 bowl_wall_h = ref * 0.15;   // straight bowl wall above the flare
 
 rim_t       = ref * 0.015;  // mm, rim outward extrusion past the wall (0 = no rim)
-rim_h       = ref * 0.09;   // mm, rim band height (Z) — must be <= bowl_wall_h
+rim_h       = ref * 0.11;   // mm, rim band height (Z) — must be <= bowl_wall_h
 rim_flare_h = ref * 0.01;   // mm, height of the rim's angled underside flare;
                             // keep >= rim_t for a <=45 deg, support-free overhang
 
-wall        = 4;            // mm, bowl wall thickness (print constraint)
+wall        = 5;            // mm, bowl wall thickness (print constraint)
 bowl_floor  = ref * 0.10;   // mm of solid between the stem top and cavity floor
 inner_round = ref * 0.16;   // radius of the rounded cavity bottom
 
