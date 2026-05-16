@@ -24,6 +24,12 @@
 //   - scotia base -> platform diam. = top_width
 // Keep `stem_d` below that platform size when retuning proportions.
 
+// Render toggle for the base. Must be set BEFORE the `include` line —
+// the base file runs its own assembly during `include`, so this value
+// has to exist by then. Set false to render the cup alone (e.g. to
+// export the cup as a separate STL).
+show_base = false;
+
 // Select the desiged base by including its file here:
 include <trophy_base_ogee_minimal.scad>
 //include <trophy_base_ogee.scad>

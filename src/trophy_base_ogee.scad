@@ -84,4 +84,7 @@ module trophy_base_ogee() {
 }
 
 // 5. Assembly
-trophy_base_ogee();
+//    `show_base` is set by trophy_cup.scad when this file is `include`d.
+//    Undefined here means the file is opened standalone -> render.
+if (is_undef(show_base) || show_base)
+    trophy_base_ogee();
