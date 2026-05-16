@@ -73,17 +73,23 @@ cup_steps   = 64;           // segments per curved profile section
 // stay <=45 deg (support-free); the horizontal top prints as a short
 // bridge.
 handles_on        = true;        // true = add the two opposite handles
-handle_t          = ref * 0.10;  // square bar side (cross-section handle_t^2)
+handle_t          = ref * 0.09;  // bar side in X and Z (rise/flare plane)
+handle_y          = handle_t * 1.4; // bar depth in Y (raise above handle_t for a
+                                 // thicker handle without changing the profile)
+handle_top_t      = handle_t * 1.2; // Z thickness of the horizontal top run; raise
+                                 // above handle_t to beef up the grip. Grows
+                                 // downward only, so the top stays under the
+                                 // rim; tapers from handle_t through the corner.
 handle_edge_r     = handle_t * 0.2; // round-over on the bar's lengthwise edges
-handle_edge_fn    = 32;          // $fn for the rounded-edge geometry
-handle_low_t      = 0.12;        // lower attach as a t-fraction up the flare
+handle_edge_fn    = 16;          // $fn for the rounded-edge geometry
+handle_low_t      = 0.13;        // lower attach as a t-fraction up the flare
                                  // (0 = stem top, 1 = top of flare)
 handle_inset      = ref * 0.08;  // how far each end sinks into the bowl wall
 handle_out        = ref * 0.18;  // flare: outer corner radius past the bowl wall
 handle_rise_lead  = 0.30;        // steep start: fraction of the total rise spent
                                  // lifting off near-vertical before the flare
                                  // run begins (higher = more vertical lift-off)
-handle_corner_r   = ref * 0.045; // fillet radius rounding the flare-to-top
+handle_corner_r   = ref * 0.035; // fillet radius rounding the flare-to-top
                                  // corner (flare stays straight, then arcs
                                  // into the horizontal top run). Small keeps
                                  // the flare running at its angle near to the
@@ -158,6 +164,15 @@ handle_arc = [ for (i = [0 : handle_arc_steps])
 
 handle_path = concat([handle_p0, handle_p1], handle_arc, [handle_p3]);
 
+//   Per-node Z thickness, parallel to handle_path: lift-off (p0,p1) stays
+//   handle_t, ramps to handle_top_t across the corner arc, full at the
+//   horizontal top anchor (p3).
+handle_tz = concat(
+    [handle_t, handle_t],
+    [ for (j = [0 : handle_arc_steps])
+        handle_t + (handle_top_t - handle_t) * j / handle_arc_steps ],
+    [handle_top_t]);
+
 //   Per-segment slope checks: lift-off (p0->p1) and flare run (p1->p2)
 //   must stay <=45 deg from vertical (support-free); the horizontal top
 //   run is a bridge, length-limited instead.
@@ -167,6 +182,8 @@ handle_bridge_len    = handle_p2[0] - handle_p3[0];
 
 assert(!handles_on || (handle_edge_r > 0 && handle_edge_r <= handle_t / 2),
        "handle_edge_r must be between 0 and handle_t/2");
+assert(!handles_on || handle_top_t >= handle_t,
+       "handle_top_t must be >= handle_t (the top run only thickens)");
 assert(!handles_on || (handle_low_t > 0 && handle_low_t < 1),
        "handle_low_t must be between 0 and 1");
 assert(!handles_on || handle_span > handle_t,
@@ -232,22 +249,27 @@ cavity_profile = concat(
 
 // 3b. Handle module — one handle swept along the 3-segment `handle_path`;
 //     trophy_handles() places and mirrors the opposite pair. Each node is
-//     a rounded cube (a square `handle_t` bar with its lengthwise edges
+//     a rounded cube (a `handle_t` x `handle_y` bar with its lengthwise edges
 //     softened by `handle_edge_r`); hulling consecutive nodes sweeps the
 //     bar: a steep lift-off, a straight diagonal flare, a horizontal top.
-module handle_node(p) {
-    translate([p[0], 0, p[1]])
+//     The top run can be thickened in Z via handle_top_t (see handle_tz).
+//     `tz` is the bar's Z height at this node; it grows downward, keeping
+//     the bar top fixed at p[1] + handle_t/2 so the top stays under the rim.
+module handle_node(p, tz = handle_t) {
+    translate([p[0], 0, p[1] + handle_t / 2 - tz / 2])
         hull()
             for (x = [-1, 1], y = [-1, 1], z = [-1, 1])
-                translate([x, y, z] * (handle_t / 2 - handle_edge_r))
+                translate([x * (handle_t / 2 - handle_edge_r),
+                           y * (handle_y / 2 - handle_edge_r),
+                           z * (tz / 2 - handle_edge_r)])
                     sphere(r = handle_edge_r, $fn = handle_edge_fn);
 }
 
 module trophy_handle() {
     for (i = [0 : len(handle_path) - 2])
         hull() {
-            handle_node(handle_path[i]);
-            handle_node(handle_path[i + 1]);
+            handle_node(handle_path[i],     handle_tz[i]);
+            handle_node(handle_path[i + 1], handle_tz[i + 1]);
         }
 }
 
