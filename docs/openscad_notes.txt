@@ -1,0 +1,3 @@
+To gengerate rendered images of the 3d design (Example):
+"C:\Program Files\OpenSCAD\openscad.exe" --camera=0,0,55,90,0,0,400 --imgsize=600,700 --projection=ortho -o path\to\output\rendered_image.png path\to\design_file.scad
+
