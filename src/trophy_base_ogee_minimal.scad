@@ -10,7 +10,7 @@ $fn = 100;
 
 // 1. Constants & parameters
 base_width   = 60;    // mm, square side at the bottom
-total_height = 30;  // mm (raised by ogee_foot_h so the foot adds height
+total_height = 31.5;  // mm (raised by ogee_foot_h so the foot adds height
                       // instead of eating the platform)
 
 ogee_foot_h  = 3.5; // mm, straight vertical skirt at the very bottom (0 = none)
@@ -26,7 +26,7 @@ top1_inset   = 3.5; // mm each side pulls in across that molding
 
 ledge_inset  = 1.5; // mm straight horizontal step inward (the shelf)
 
-top2_h       = 3;   // mm, second (smaller) convex molding height
+top2_h       = 4.5;   // mm, second (smaller) convex molding height
 top2_inset   = 3;   // mm each side pulls in across that molding
 // remaining height -> flat top platform
 

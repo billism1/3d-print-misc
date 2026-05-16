@@ -44,38 +44,41 @@ ref = base_width;
 stem_d      = ref * 0.30;   // stem diameter at the base platform
 stem_h      = ref * 0.10;   // straight stem height
 
-flare_h     = ref * 0.75;   // height of the bowl's flared foot
+flare_h     = ref * 0.70;   // height of the bowl's flared foot
 bowl_d      = ref * 0.78;   // outer rim diameter (kept under base_width)
-bowl_wall_h = ref * 0.10;   // straight bowl wall above the flare
+bowl_wall_h = ref * 0.15;   // straight bowl wall above the flare
 
 rim_t       = ref * 0.015;  // mm, rim outward extrusion past the wall (0 = no rim)
 rim_h       = ref * 0.09;   // mm, rim band height (Z) — must be <= bowl_wall_h
 rim_flare_h = ref * 0.01;   // mm, height of the rim's angled underside flare;
                             // keep >= rim_t for a <=45 deg, support-free overhang
 
-wall        = 3;            // mm, bowl wall thickness (print constraint)
+wall        = 4;            // mm, bowl wall thickness (print constraint)
 bowl_floor  = ref * 0.10;   // mm of solid between the stem top and cavity floor
 inner_round = ref * 0.16;   // radius of the rounded cavity bottom
 
 seat_depth  = 1;            // mm the stem sinks into the base to fuse them
 cavity_over = 5;            // mm the cavity overshoots the rim to open it
 
-cup_fn      = 180;          // $fn for the revolved cup surfaces
+cup_fn      = 160;          // $fn for the revolved cup surfaces
 cup_steps   = 64;           // segments per curved profile section
 
 // Optional holder arms — a pair of handles on two opposite sides of the
 // bowl, like a classic loving-cup trophy. Set `handles_on` true to add
 // them. Each handle attaches low on the bowl near the stem, flares up and
-// out at a print-friendly angle, then turns sharply inward into the bowl
-// wall just under the rim. The ends sink into the wall and are trimmed
+// out at a print-friendly angle, then curls up and inward into the bowl
+// wall just under the rim. The cross-section is a solid square bar (flat
+// faces, not a round tube). The ends sink into the wall and are trimmed
 // flush by the cavity cut.
-handles_on   = true;        // true = add the two opposite handles
-handle_t     = ref * 0.10;  // tube thickness of the handle
-handle_out   = ref * 0.12;  // outward bulge past the bowl wall
-handle_low_t = 0.12;        // lower attach point as a t-fraction up the
-                            // flare (0 = stem top, 1 = top of flare)
-handle_inset = ref * 0.08;  // how far the handle ends sink past the wall
-handle_fn    = 64;          // $fn for the handle's swept tube
+handles_on      = false;        // true = add the two opposite handles
+handle_t        = ref * 0.10;  // square bar side (cross-section handle_t x handle_t)
+handle_out      = ref * 0.12;  // outward bulge past the bowl wall
+handle_low_t    = 0.12;        // lower attach point as a t-fraction up the
+                               // flare (0 = stem top, 1 = top of flare)
+handle_inset    = ref * 0.08;  // how far the handle ends sink past the wall
+handle_top_rise = ref * 0.06;  // how much the inner end curls up above the
+                               // outer corner (the up-and-in curl at the top)
+handle_curve_steps = 24;       // segments in the curved top section
 
 // 2. Derived dimensions
 stem_r  = stem_d / 2;
@@ -108,27 +111,42 @@ assert(rim_h >= 0 && rim_h <= bowl_wall_h, "rim_h must be between 0 and bowl_wal
 assert(rim_flare_h >= 0 && rim_flare_h <= rim_h, "rim_flare_h must be between 0 and rim_h");
 
 // Optional handle — path geometry and guards
-//   Three points in the X-Z plane: lower attach (into the bowl near the
-//   stem) -> outer top corner -> upper attach (into the wall under the rim).
+//   X-Z path: lower attach (into the bowl near the stem) -> outer corner
+//   -> a curved arc that curls up and inward to the upper attach (into
+//   the wall just under the rim). The upper attach sits `handle_top_rise`
+//   above the outer corner, so the bar curves upward at the top.
 handle_low_z  = stem_h + flare_h * handle_low_t;
 handle_low_r  = stem_r + (bowl_r - stem_r) * (1 - cos(180 * handle_low_t)) / 2;
-handle_high_z = z_rim0 - handle_t / 2;          // tube top lands just under rim
+handle_high_z = z_rim0 - handle_t / 2;            // bar top lands just under rim
+handle_out_z  = handle_high_z - handle_top_rise;  // outer corner, below the inner end
 
-handle_path = [
-    [handle_low_r - handle_inset, handle_low_z ],   // lower attach (near stem)
-    [bowl_r + handle_out,         handle_high_z],   // outer top corner
-    [bowl_r - handle_inset,       handle_high_z],   // upper attach (under rim)
-];
+handle_low_pt = [handle_low_r - handle_inset, handle_low_z];
+handle_out_pt = [bowl_r + handle_out,         handle_out_z];
+handle_top_pt = [bowl_r - handle_inset,       handle_high_z];
 
-handle_rise = handle_high_z - handle_low_z;                            // up
-handle_run  = (bowl_r + handle_out) - (handle_low_r - handle_inset);   // out
+//   Curved top: move inward (X) linearly while rising (Z) on a cosine
+//   ease — the bar leaves the outer corner level, then curls up and into
+//   the wall.
+handle_top_curve = [ for (i = [1 : handle_curve_steps])
+    let (t = i / handle_curve_steps)
+    [ handle_out_pt[0] + (handle_top_pt[0] - handle_out_pt[0]) * t,
+      handle_out_pt[1] + (handle_top_pt[1] - handle_out_pt[1]) * (1 - cos(90 * t)) ] ];
+
+handle_path = concat([handle_low_pt, handle_out_pt], handle_top_curve);
+
+handle_rise = handle_out_z - handle_low_z;                             // up to corner
+handle_run  = (bowl_r + handle_out) - (handle_low_r - handle_inset);   // out to corner
 
 assert(!handles_on || (handle_low_t > 0 && handle_low_t < 1),
        "handle_low_t must be between 0 and 1");
 assert(!handles_on || handle_high_z > handle_low_z + handle_t,
        "handle has no usable height: lower handle_low_t or raise the bowl");
+assert(!handles_on || handle_top_rise >= 0,
+       "handle_top_rise must not be negative");
+assert(!handles_on || handle_out_z > handle_low_z,
+       "handle_top_rise too large: outer corner sinks below the lower attach");
 assert(!handles_on || handle_run <= handle_rise,
-       "handle flare steeper than 45 deg (not support-free): reduce handle_out or lower handle_low_t");
+       "handle flare steeper than 45 deg (not support-free): reduce handle_out, handle_top_rise, or lower handle_low_t");
 
 // 3. Profiles (list of [radius, z], revolved around the Z axis)
 //    Outer: stem -> cosine-S flare -> straight bowl wall -> rim -> closed top.
@@ -172,17 +190,18 @@ cavity_profile = concat(
     [ [inner_r, cav_top], [0, cav_top] ]         // straight cylinder -> open top
 );
 
-// 3b. Handle module — one handle swept along `handle_path`; trophy_handles()
-//     places and mirrors the opposite pair. Built as hulled spheres so the
-//     corners round off (no sharp stress risers). The flared run leans out
-//     <=45 deg; the top run bridges horizontally into the wall.
+// 3b. Handle module — one handle swept along `handle_path` as a solid
+//     square bar; trophy_handles() places and mirrors the opposite pair.
+//     Each segment is the hull of two axis-aligned cubes, giving flat
+//     faces (square cross-section, not a round tube). The flared run leans
+//     out <=45 deg; the top section curls up and inward into the wall.
 module trophy_handle() {
     for (i = [0 : len(handle_path) - 2])
         hull() {
             translate([handle_path[i][0], 0, handle_path[i][1]])
-                sphere(d = handle_t, $fn = handle_fn);
+                cube(handle_t, center = true);
             translate([handle_path[i + 1][0], 0, handle_path[i + 1][1]])
-                sphere(d = handle_t, $fn = handle_fn);
+                cube(handle_t, center = true);
         }
 }
 
