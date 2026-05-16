@@ -78,7 +78,7 @@ cup_steps   = 60;           // segments per curved profile section
 // bridge.
 handles_on        = true;        // true = add the two opposite handles
 handle_t          = ref * 0.09;  // bar side in X and Z (rise/flare plane)
-handle_y          = handle_t * 1.9; // bar depth in Y (raise above handle_t for a
+handle_y          = handle_t * 2.2; // bar depth in Y (raise above handle_t for a
                                  // thicker handle without changing the profile)
 handle_top_t      = handle_t * 1.2; // Z thickness of the horizontal top run; raise
                                  // above handle_t to beef up the grip. Grows
@@ -89,7 +89,7 @@ handle_edge_fn    = 16;          // $fn for the rounded-edge geometry
 handle_low_t      = 0.13;        // lower attach as a t-fraction up the flare
                                  // (0 = stem top, 1 = top of flare)
 handle_inset      = ref * 0.08;  // how far each end sinks into the bowl wall
-handle_out        = ref * 0.18;  // flare: outer corner radius past the bowl wall
+handle_out        = ref * 0.15;  // flare: outer corner radius past the bowl wall
 handle_rise_lead  = 0.30;        // steep start: fraction of the total rise spent
                                  // lifting off near-vertical before the flare
                                  // run begins (higher = more vertical lift-off)
