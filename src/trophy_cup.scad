@@ -74,7 +74,7 @@ cup_steps   = 64;           // segments per curved profile section
 // bridge.
 handles_on        = true;        // true = add the two opposite handles
 handle_t          = ref * 0.09;  // bar side in X and Z (rise/flare plane)
-handle_y          = handle_t * 1.4; // bar depth in Y (raise above handle_t for a
+handle_y          = handle_t * 1.9; // bar depth in Y (raise above handle_t for a
                                  // thicker handle without changing the profile)
 handle_top_t      = handle_t * 1.2; // Z thickness of the horizontal top run; raise
                                  // above handle_t to beef up the grip. Grows
