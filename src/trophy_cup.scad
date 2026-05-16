@@ -43,6 +43,10 @@ ref = base_width;
 
 stem_d      = ref * 0.30;   // stem diameter at the base platform
 stem_h      = ref * 0.10;   // straight stem height
+stem_flare_r = stem_d / 2 * 0.40; // concave fillet radius flaring the stem
+                            // foot into the base — small = subtle curve.
+                            // 0 = sharp foot, no flare.
+stem_flare_n = 12;          // segments in the stem-foot fillet arc
 
 flare_h     = ref * 0.70;   // height of the bowl's flared foot
 bowl_d      = ref * 0.78;   // outer rim diameter (kept under base_width)
@@ -124,6 +128,9 @@ assert(z_round < z_flare,
        "cavity curve too tall: rounded floor exceeds the flare — reduce bowl_floor/inner_round or raise flare_h");
 assert(r_join > 0,      "flare too narrow at the cavity floor: r_join <= 0");
 assert(rim_t >= 0,      "rim_t must not be negative");
+assert(stem_flare_r >= 0, "stem_flare_r must not be negative");
+assert(stem_flare_r < stem_h,
+       "stem_flare_r too large: no straight stem left — reduce stem_flare_r or raise stem_h");
 assert(rim_h >= 0 && rim_h <= bowl_wall_h, "rim_h must be between 0 and bowl_wall_h");
 assert(rim_flare_h >= 0 && rim_flare_h <= rim_h, "rim_flare_h must be between 0 and rim_h");
 
@@ -211,6 +218,18 @@ flare_pts = [ for (i = [1 : cup_steps])
     let (t = i / cup_steps)
     [ stem_r + (bowl_r - stem_r) * (1 - cos(180 * t)) / 2, stem_h + flare_h * t ] ];
 
+//    Concave fillet flaring the stem foot into the base. Quarter-circle
+//    arc, centre [stem_r + stem_flare_r, stem_flare_r]: widest at z = 0
+//    (radius stem_r + stem_flare_r), tangent to the straight stem at
+//    z = stem_flare_r. From the side this reads as a smooth concave
+//    curve into the base. stem_flare_r = 0 collapses it to a sharp foot.
+stem_foot = stem_flare_r > 0
+    ? [ for (i = [0 : stem_flare_n])
+        let (a = 270 - 90 * i / stem_flare_n)
+        [ stem_r + stem_flare_r + stem_flare_r * cos(a),
+          stem_flare_r + stem_flare_r * sin(a) ] ]
+    : [ [stem_r, 0] ];
+
 //    Top of the outer profile. With a rim: wall -> diagonal flare (out and
 //    up, so the underside is a printable slope, not a 90 deg overhang) ->
 //    straight rim face. Without: plain wall vertex (omitted when no wall).
@@ -221,7 +240,9 @@ outer_top = rim_active
     : (bowl_wall_h > 0 ? [ [bowl_r, cup_top] ] : []);
 
 outer_profile = concat(
-    [ [0, 0], [stem_r, 0], [stem_r, stem_h] ],   // axis -> stem
+    [ [0, 0] ],                                  // axis
+    stem_foot,                                   // flared stem foot
+    [ [stem_r, stem_h] ],                        // straight stem
     flare_pts,                                   // flared foot
     outer_top,                                   // straight wall + optional rim
     [ [0, cup_top] ]                             // closed top
