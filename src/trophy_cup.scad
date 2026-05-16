@@ -60,8 +60,8 @@ inner_round = ref * 0.16;   // radius of the rounded cavity bottom
 seat_depth  = 1;            // mm the stem sinks into the base to fuse them
 cavity_over = 5;            // mm the cavity overshoots the rim to open it
 
-cup_fn      = 160;          // $fn for the revolved cup surfaces
-cup_steps   = 64;           // segments per curved profile section
+cup_fn      = 150;          // $fn for the revolved cup surfaces
+cup_steps   = 60;           // segments per curved profile section
 
 // Optional holder arms — a pair of handles on two opposite sides of the
 // bowl, like a classic loving-cup trophy. Set `handles_on` true to add
