@@ -48,8 +48,10 @@ flare_h     = ref * 0.75;   // height of the bowl's flared foot
 bowl_d      = ref * 0.78;   // outer rim diameter (kept under base_width)
 bowl_wall_h = ref * 0.10;   // straight bowl wall above the flare
 
-rim_t       = ref * 0.015;   // mm, rim outward extrusion past the wall (0 = no rim)
+rim_t       = ref * 0.015;  // mm, rim outward extrusion past the wall (0 = no rim)
 rim_h       = ref * 0.09;   // mm, rim band height (Z) — must be <= bowl_wall_h
+rim_flare_h = ref * 0.01;   // mm, height of the rim's angled underside flare;
+                            // keep >= rim_t for a <=45 deg, support-free overhang
 
 wall        = 3;            // mm, bowl wall thickness (print constraint)
 bowl_floor  = ref * 0.10;   // mm of solid between the stem top and cavity floor
@@ -89,6 +91,7 @@ assert(z_round < z_flare,
 assert(r_join > 0,      "flare too narrow at the cavity floor: r_join <= 0");
 assert(rim_t >= 0,      "rim_t must not be negative");
 assert(rim_h >= 0 && rim_h <= bowl_wall_h, "rim_h must be between 0 and bowl_wall_h");
+assert(rim_flare_h >= 0 && rim_flare_h <= rim_h, "rim_flare_h must be between 0 and rim_h");
 
 // 3. Profiles (list of [radius, z], revolved around the Z axis)
 //    Outer: stem -> cosine-S flare -> straight bowl wall -> rim -> closed top.
@@ -96,12 +99,13 @@ flare_pts = [ for (i = [1 : cup_steps])
     let (t = i / cup_steps)
     [ stem_r + (bowl_r - stem_r) * (1 - cos(180 * t)) / 2, stem_h + flare_h * t ] ];
 
-//    Top of the outer profile. With a rim: wall -> step out -> rim face.
-//    Without: plain wall vertex (omitted entirely when bowl_wall_h == 0).
+//    Top of the outer profile. With a rim: wall -> diagonal flare (out and
+//    up, so the underside is a printable slope, not a 90 deg overhang) ->
+//    straight rim face. Without: plain wall vertex (omitted when no wall).
 outer_top = rim_active
-    ? [ [bowl_r,         z_rim0],    // bowl wall up to the rim
-        [bowl_r + rim_t, z_rim0],    // step outward
-        [bowl_r + rim_t, cup_top] ]  // rim outer face up to the rim top
+    ? [ [bowl_r,         z_rim0],                   // bowl wall meets the rim
+        [bowl_r + rim_t, z_rim0 + rim_flare_h],     // flare out and up
+        [bowl_r + rim_t, cup_top] ]                 // straight rim face
     : (bowl_wall_h > 0 ? [ [bowl_r, cup_top] ] : []);
 
 outer_profile = concat(
