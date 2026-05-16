@@ -9,11 +9,15 @@
 $fn = 100;
 
 // 1. Constants & parameters
-base_width   = 60;  // mm, square side at the bottom
-total_height = 27.5;  // mm
+base_width   = 60;    // mm, square side at the bottom
+total_height = 28;  // mm (raised by ogee_foot_h so the foot adds height
+                      // instead of eating the platform)
 
-ogee_h       = 10;  // mm, height of the bottom S-curve
+ogee_foot_h  = 3.5; // mm, straight vertical skirt at the very bottom (0 = none)
+ogee_h       = 7;   // mm, height of the bottom S-curve (shorter = steeper arcs)
 ogee_inset   = 5;   // mm each side pulls in across the ogee
+ogee_inflect = 0.5; // fraction of ogee_h at the convex/concave inflection;
+                    // raise for a steeper concave, lower for a steeper convex
 
 riser_h      = 10;  // mm, straight vertical shaft above the ogee. There is where any text or logo would be engraved, so this section is taller than the original.
 
@@ -32,12 +36,14 @@ arc_steps    = 48;  // segments generated per curved profile section
 hw0    = base_width / 2;        // half-width at the base
 hw1    = hw0 - ogee_inset;     // half-width of the riser
 hw_mid = hw0 - ogee_inset / 2; // half-width at the ogee inflection
-z_mid  = ogee_h / 2;           // z of the ogee inflection
+z_mid  = ogee_h * ogee_inflect;// z of the ogee inflection (above the foot)
+conc_h = ogee_h - z_mid;       // height of the concave upper arc
 hw2 = hw1 - top1_inset;        // half-width after the first molding
 hw3 = hw2 - ledge_inset;       // half-width after the ledge
 hw4 = hw3 - top2_inset;        // half-width of the platform
 
-z_riser   = ogee_h;                       // ogee ends / riser begins
+z_ogee0   = ogee_foot_h;                  // foot ends / ogee S-curve begins
+z_riser   = z_ogee0 + ogee_h;             // ogee ends / riser begins
 z_top1    = z_riser + riser_h;            // riser ends / molding 1 begins
 z_ledge   = z_top1 + top1_h;              // molding 1 ends / ledge + molding 2
 z_top2    = z_ledge + top2_h;             // molding 2 ends / platform begins
@@ -45,19 +51,21 @@ platform_h = total_height - z_top2;
 
 assert(hw4 > 0,         "insets too large: platform half-width <= 0");
 assert(platform_h >= 0, "height too small: sections exceed total_height");
+assert(ogee_inflect > 0 && ogee_inflect < 1, "ogee_inflect must be between 0 and 1");
+assert(ogee_foot_h >= 0, "ogee_foot_h must not be negative");
 
 // 3. Profile (list of [half-width, z], bottom -> top)
-//    Ogee bottom convex: quarter-arc, vertical tangent at base → horizontal
-//    at inflection. Same formula as the upper moldings — tighter curve.
+//    Ogee bottom convex: quarter-arc, vertical tangent at the foot →
+//    horizontal at inflection. Same formula as the upper moldings.
 ogee_conv_pts = [ for (i = [0 : arc_steps])
     let (a = 90 * i / arc_steps)
-    [ hw0 - (ogee_inset / 2) * (1 - cos(a)), z_mid * sin(a) ] ];
+    [ hw0 - (ogee_inset / 2) * (1 - cos(a)), z_ogee0 + z_mid * sin(a) ] ];
 
 //    Ogee upper concave: quarter-arc, horizontal tangent at inflection →
 //    vertical at riser (smooth blend into the straight shaft).
 ogee_conc_pts = [ for (i = [1 : arc_steps])
     let (a = 90 * i / arc_steps)
-    [ hw_mid - (ogee_inset / 2) * sin(a), z_mid + z_mid * (1 - cos(a)) ] ];
+    [ hw_mid - (ogee_inset / 2) * sin(a), z_ogee0 + z_mid + conc_h * (1 - cos(a)) ] ];
 
 //    Convex molding 1: vertical tangent at the riser, horizontal at ledge.
 top1_pts = [ for (i = [1 : arc_steps])
@@ -70,6 +78,7 @@ top2_pts = [ for (i = [1 : arc_steps])
     [ hw3 - top2_inset * (1 - cos(a)), z_ledge + top2_h * sin(a) ] ];
 
 profile = concat(
+    [ [hw0, 0] ],                   // straight vertical foot (skipped if 0)
     ogee_conv_pts,                  // convex lower arc, ends at [hw_mid, z_mid]
     ogee_conc_pts,                  // concave upper arc, ends at [hw1, z_riser]
     [ [hw1, z_top1] ],              // straight riser
