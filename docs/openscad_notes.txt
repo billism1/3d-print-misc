@@ -1,0 +1,40 @@
+# Render trophy to STL:
+"C:\Program Files\OpenSCAD\openscad.exe" -o "publication\trophy_cup.stl" "src\trophy_cup.scad"
+
+# Faster preview-quality (PNG, catches errors fast):
+"C:\Program Files\OpenSCAD\openscad.exe" -o "trophy_cup_preview.png" "src\trophy_cup.scad"
+
+
+# To gengerate rendered images of the 3d design from specific angle:
+"C:\Program Files\OpenSCAD\openscad.exe" --camera=0,0,55,90,0,0,400 --imgsize=600,700 --projection=ortho -o path\to\output\rendered_image.png path\to\design_file.scad
+
+
+
+
+
+# Some other commands:
+
+{
+  "command": "$exe=\"C:\\Program Files\\OpenSCAD\\openscad.exe\"; $f=\"c:\\Users\\billi\\Source\\repos\\3d-print-misc\\src\\trophy_cup.scad\"; $o=\"$env:TEMP\\t.stl\"; $perr=\"$env:TEMP\\e.txt\"; $pout=\"$env:TEMP\\o.txt\"; $proc=Start-Process -FilePath $exe -ArgumentList @(\"-o\",$o,$f) -NoNewWindow -Wait -PassThru -RedirectStandardError $perr -RedirectStandardOutput $pout; Write-Output \"exit: $($proc.ExitCode)\"; Write-Output \"--- stderr ---\"; Get-Content $perr; Write-Output \"--- stdout ---\"; Get-Content $pout",
+  "description": "Render with separated stdout/stderr"
+}
+
+{
+  "command": "$exe=\"C:\\Program Files\\OpenSCAD\\openscad.exe\"; $log=\"$env:TEMP\\osc.log\"; & $exe -o \"$env:TEMP\\t.stl\" \"c:\\Users\\billi\\Source\\repos\\3d-print-misc\\src\\trophy_cup.scad\" *> $log; Write-Output \"exit: $LASTEXITCODE\"; Get-Content $log",
+  "description": "Render and dump full log"
+}
+
+{
+  "command": "$p = @(\"C:\\Program Files\\OpenSCAD\\openscad.exe\",\"C:\\Program Files\\OpenSCAD (Nightly)\\openscad.exe\") | Where-Object { Test-Path $_ } | Select-Object -First 1; Write-Output \"exe: $p\"; if ($p) { & $p -o \"$env:TEMP\\tc_test.stl\" \"c:\\Users\\billi\\Source\\repos\\3d-print-misc\\src\\trophy_cup.scad\" 2>&1 | Out-String; Write-Output \"exit: $LASTEXITCODE\"; Write-Output (\"stl exists: \" + (Test-Path \"$env:TEMP\\tc_test.stl\")) }",
+  "description": "Render and capture output"
+}
+
+{
+  "command": "$p = @(\"C:\\Program Files\\OpenSCAD\\openscad.exe\",\"C:\\Program Files\\OpenSCAD (Nightly)\\openscad.exe\") | Where-Object { Test-Path $_ } | Select-Object -First 1; if ($p) { & $p -o \"$env:TEMP\\tc_test.stl\" \"c:\\Users\\billi\\Source\\repos\\3d-print-misc\\src\\trophy_cup.scad\" } else { \"openscad not found\"; (Get-Command openscad -ErrorAction SilentlyContinue).Source }",
+  "description": "Render trophy_cup.scad to surface error"
+}
+
+{
+  "command": "$exe=\"C:\\Program Files\\OpenSCAD\\openscad.exe\"; $f=\"c:\\Users\\billi\\Source\\repos\\3d-print-misc\\src\\trophy_cup.scad\"; foreach ($d in @(\"\",\"-D rim_t=0\",\"-D bowl_wall_h=0 -D rim_h=0\")) { $perr=\"$env:TEMP\\e.txt\"; $args=@(); if($d){$args+=$d.Split(\" \")}; $args+=@(\"-o\",\"$env:TEMP\\t.stl\",$f); $proc=Start-Process -FilePath $exe -ArgumentList $args -NoNewWindow -Wait -PassThru -RedirectStandardError $perr; Write-Output \"[$d] exit: $($proc.ExitCode)\"; (Get-Content $perr) -match \"Simple|ERROR|WARNING\" }",
+  "description": "Render cup: default, rim_t=0, bowl_wall_h=0"
+}
