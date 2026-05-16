@@ -9,21 +9,21 @@
 $fn = 100;
 
 // 1. Constants & parameters
-base_width   = 90;  // mm, square side at the bottom
-total_height = 45;  // mm
+base_width   = 60;  // mm, square side at the bottom
+total_height = 27.5;  // mm
 
-ogee_h       = 20;  // mm, height of the bottom S-curve
-ogee_inset   = 14;  // mm each side pulls in across the ogee
+ogee_h       = 10;  // mm, height of the bottom S-curve
+ogee_inset   = 7;   // mm each side pulls in across the ogee
 
 riser_h      = 10;  // mm, straight vertical shaft above the ogee
 
-top1_h       = 9;   // mm, first (larger) convex top molding height
-top1_inset   = 9;   // mm each side pulls in across that molding
+top1_h       = 4.5; // mm, first (larger) convex top molding height
+top1_inset   = 4.5; // mm each side pulls in across that molding
 
-ledge_inset  = 3;   // mm straight horizontal step inward (the shelf)
+ledge_inset  = 1.5; // mm straight horizontal step inward (the shelf)
 
-top2_h       = 6;   // mm, second (smaller) convex molding height
-top2_inset   = 6;   // mm each side pulls in across that molding
+top2_h       = 3;   // mm, second (smaller) convex molding height
+top2_inset   = 3;   // mm each side pulls in across that molding
 // remaining height -> flat top platform
 
 arc_steps    = 48;  // segments generated per curved profile section
