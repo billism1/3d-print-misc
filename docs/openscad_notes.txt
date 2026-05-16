@@ -1,4 +1,4 @@
-# Render to STL:
+# Render trophy to STL:
 "C:\Program Files\OpenSCAD\openscad.exe" -o "publication\trophy_cup.stl" "src\trophy_cup.scad"
 
 # Faster preview-quality (PNG, catches errors fast):
@@ -34,3 +34,7 @@
   "description": "Render trophy_cup.scad to surface error"
 }
 
+{
+  "command": "$exe=\"C:\\Program Files\\OpenSCAD\\openscad.exe\"; $f=\"c:\\Users\\billi\\Source\\repos\\3d-print-misc\\src\\trophy_cup.scad\"; foreach ($d in @(\"\",\"-D rim_t=0\",\"-D bowl_wall_h=0 -D rim_h=0\")) { $perr=\"$env:TEMP\\e.txt\"; $args=@(); if($d){$args+=$d.Split(\" \")}; $args+=@(\"-o\",\"$env:TEMP\\t.stl\",$f); $proc=Start-Process -FilePath $exe -ArgumentList $args -NoNewWindow -Wait -PassThru -RedirectStandardError $perr; Write-Output \"[$d] exit: $($proc.ExitCode)\"; (Get-Content $perr) -match \"Simple|ERROR|WARNING\" }",
+  "description": "Render cup: default, rim_t=0, bowl_wall_h=0"
+}

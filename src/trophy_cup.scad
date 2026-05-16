@@ -46,7 +46,10 @@ stem_h      = ref * 0.10;   // straight stem height
 
 flare_h     = ref * 0.75;   // height of the bowl's flared foot
 bowl_d      = ref * 0.78;   // outer rim diameter (kept under base_width)
-bowl_wall_h = ref * 0.20;   // straight bowl wall above the flare
+bowl_wall_h = ref * 0.10;   // straight bowl wall above the flare
+
+rim_t       = ref * 0.015;   // mm, rim outward extrusion past the wall (0 = no rim)
+rim_h       = ref * 0.09;   // mm, rim band height (Z) — must be <= bowl_wall_h
 
 wall        = 3;            // mm, bowl wall thickness (print constraint)
 bowl_floor  = ref * 0.10;   // mm of solid between the stem top and cavity floor
@@ -70,6 +73,9 @@ cav_z0  = stem_h + bowl_floor;          // cavity floor — set inside the flare
 z_round = cav_z0 + inner_round;         // top of the rounded cavity floor
 cav_top = cup_top + cavity_over;        // cavity opens past the rim
 
+rim_active = rim_t > 0 && rim_h > 0;    // rim suppressed when either is 0
+z_rim0     = cup_top - rim_h;           // rim band starts here
+
 //    Flare parameter t where the rounded floor blends into the flare wall,
 //    and the inner-wall radius there (outer flare offset inward by `wall`).
 t_join  = (z_round - stem_h) / flare_h;
@@ -81,17 +87,27 @@ assert(bowl_floor > 0,  "bowl_floor must be positive: cavity floor sits in the s
 assert(z_round < z_flare,
        "cavity curve too tall: rounded floor exceeds the flare — reduce bowl_floor/inner_round or raise flare_h");
 assert(r_join > 0,      "flare too narrow at the cavity floor: r_join <= 0");
+assert(rim_t >= 0,      "rim_t must not be negative");
+assert(rim_h >= 0 && rim_h <= bowl_wall_h, "rim_h must be between 0 and bowl_wall_h");
 
 // 3. Profiles (list of [radius, z], revolved around the Z axis)
-//    Outer: stem -> cosine-S flare -> straight bowl wall -> closed top.
+//    Outer: stem -> cosine-S flare -> straight bowl wall -> rim -> closed top.
 flare_pts = [ for (i = [1 : cup_steps])
     let (t = i / cup_steps)
     [ stem_r + (bowl_r - stem_r) * (1 - cos(180 * t)) / 2, stem_h + flare_h * t ] ];
 
+//    Top of the outer profile. With a rim: wall -> step out -> rim face.
+//    Without: plain wall vertex (omitted entirely when bowl_wall_h == 0).
+outer_top = rim_active
+    ? [ [bowl_r,         z_rim0],    // bowl wall up to the rim
+        [bowl_r + rim_t, z_rim0],    // step outward
+        [bowl_r + rim_t, cup_top] ]  // rim outer face up to the rim top
+    : (bowl_wall_h > 0 ? [ [bowl_r, cup_top] ] : []);
+
 outer_profile = concat(
     [ [0, 0], [stem_r, 0], [stem_r, stem_h] ],   // axis -> stem
     flare_pts,                                   // flared foot
-    bowl_wall_h > 0 ? [ [bowl_r, cup_top] ] : [],// straight bowl wall (if any)
+    outer_top,                                   // straight wall + optional rim
     [ [0, cup_top] ]                             // closed top
 );
 
