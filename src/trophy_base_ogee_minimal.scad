@@ -10,7 +10,7 @@ $fn = 100;
 
 // 1. Constants & parameters
 base_width   = 60;    // mm, square side at the bottom
-total_height = 28;  // mm (raised by ogee_foot_h so the foot adds height
+total_height = 30;  // mm (raised by ogee_foot_h so the foot adds height
                       // instead of eating the platform)
 
 ogee_foot_h  = 3.5; // mm, straight vertical skirt at the very bottom (0 = none)
@@ -19,7 +19,7 @@ ogee_inset   = 5;   // mm each side pulls in across the ogee
 ogee_inflect = 0.5; // fraction of ogee_h at the convex/concave inflection;
                     // raise for a steeper concave, lower for a steeper convex
 
-riser_h      = 10;  // mm, straight vertical shaft above the ogee. There is where any text or logo would be engraved, so this section is taller than the original.
+riser_h      = 12;  // mm, straight vertical shaft above the ogee. There is where any text or logo would be engraved, so this section is taller than the original.
 
 top1_h       = 4.5; // mm, first (larger) convex top molding height
 top1_inset   = 3.5; // mm each side pulls in across that molding

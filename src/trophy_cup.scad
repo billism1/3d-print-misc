@@ -60,8 +60,22 @@ inner_round = ref * 0.16;   // radius of the rounded cavity bottom
 seat_depth  = 1;            // mm the stem sinks into the base to fuse them
 cavity_over = 5;            // mm the cavity overshoots the rim to open it
 
-cup_fn      = 128;          // $fn for the revolved cup surfaces
+cup_fn      = 180;          // $fn for the revolved cup surfaces
 cup_steps   = 64;           // segments per curved profile section
+
+// Optional holder arms — a pair of handles on two opposite sides of the
+// bowl, like a classic loving-cup trophy. Set `handles_on` true to add
+// them. Each handle attaches low on the bowl near the stem, flares up and
+// out at a print-friendly angle, then turns sharply inward into the bowl
+// wall just under the rim. The ends sink into the wall and are trimmed
+// flush by the cavity cut.
+handles_on   = true;        // true = add the two opposite handles
+handle_t     = ref * 0.10;  // tube thickness of the handle
+handle_out   = ref * 0.12;  // outward bulge past the bowl wall
+handle_low_t = 0.12;        // lower attach point as a t-fraction up the
+                            // flare (0 = stem top, 1 = top of flare)
+handle_inset = ref * 0.08;  // how far the handle ends sink past the wall
+handle_fn    = 64;          // $fn for the handle's swept tube
 
 // 2. Derived dimensions
 stem_r  = stem_d / 2;
@@ -92,6 +106,29 @@ assert(r_join > 0,      "flare too narrow at the cavity floor: r_join <= 0");
 assert(rim_t >= 0,      "rim_t must not be negative");
 assert(rim_h >= 0 && rim_h <= bowl_wall_h, "rim_h must be between 0 and bowl_wall_h");
 assert(rim_flare_h >= 0 && rim_flare_h <= rim_h, "rim_flare_h must be between 0 and rim_h");
+
+// Optional handle — path geometry and guards
+//   Three points in the X-Z plane: lower attach (into the bowl near the
+//   stem) -> outer top corner -> upper attach (into the wall under the rim).
+handle_low_z  = stem_h + flare_h * handle_low_t;
+handle_low_r  = stem_r + (bowl_r - stem_r) * (1 - cos(180 * handle_low_t)) / 2;
+handle_high_z = z_rim0 - handle_t / 2;          // tube top lands just under rim
+
+handle_path = [
+    [handle_low_r - handle_inset, handle_low_z ],   // lower attach (near stem)
+    [bowl_r + handle_out,         handle_high_z],   // outer top corner
+    [bowl_r - handle_inset,       handle_high_z],   // upper attach (under rim)
+];
+
+handle_rise = handle_high_z - handle_low_z;                            // up
+handle_run  = (bowl_r + handle_out) - (handle_low_r - handle_inset);   // out
+
+assert(!handles_on || (handle_low_t > 0 && handle_low_t < 1),
+       "handle_low_t must be between 0 and 1");
+assert(!handles_on || handle_high_z > handle_low_z + handle_t,
+       "handle has no usable height: lower handle_low_t or raise the bowl");
+assert(!handles_on || handle_run <= handle_rise,
+       "handle flare steeper than 45 deg (not support-free): reduce handle_out or lower handle_low_t");
 
 // 3. Profiles (list of [radius, z], revolved around the Z axis)
 //    Outer: stem -> cosine-S flare -> straight bowl wall -> rim -> closed top.
@@ -135,11 +172,35 @@ cavity_profile = concat(
     [ [inner_r, cav_top], [0, cav_top] ]         // straight cylinder -> open top
 );
 
+// 3b. Handle module — one handle swept along `handle_path`; trophy_handles()
+//     places and mirrors the opposite pair. Built as hulled spheres so the
+//     corners round off (no sharp stress risers). The flared run leans out
+//     <=45 deg; the top run bridges horizontally into the wall.
+module trophy_handle() {
+    for (i = [0 : len(handle_path) - 2])
+        hull() {
+            translate([handle_path[i][0], 0, handle_path[i][1]])
+                sphere(d = handle_t, $fn = handle_fn);
+            translate([handle_path[i + 1][0], 0, handle_path[i + 1][1]])
+                sphere(d = handle_t, $fn = handle_fn);
+        }
+}
+
+module trophy_handles() {
+    for (a = [0, 180])
+        rotate([0, 0, a])
+            trophy_handle();
+}
+
 // 4. Component module
 module trophy_cup() {
     difference() {
-        rotate_extrude($fn = cup_fn)
-            polygon(outer_profile);
+        union() {
+            rotate_extrude($fn = cup_fn)
+                polygon(outer_profile);
+            if (handles_on)
+                trophy_handles();
+        }
         rotate_extrude($fn = cup_fn)
             polygon(cavity_profile);
     }
