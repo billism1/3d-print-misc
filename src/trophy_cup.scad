@@ -65,13 +65,13 @@ cup_steps   = 64;           // segments per curved profile section
 
 // Optional holder arms — a pair of handles on two opposite sides of the
 // bowl, like a classic loving-cup trophy. Set `handles_on` true to add
-// them. Each handle is a square bar following a 3-segment path: a steep
-// near-vertical lift-off off the bowl near the stem, a straight diagonal
-// flare out and up, then a horizontal top run that angles sharply inward
-// and sinks into the wall just under the rim. Both end anchors bury into
-// the wall; the cavity cut trims the buried inner end flush. The lift-off
-// and flare run stay <=45 deg (support-free); the horizontal top prints
-// as a short bridge.
+// them. Each handle is a square bar following the path: a steep near-
+// vertical lift-off off the bowl near the stem, a straight diagonal flare
+// out and up, a rounded corner, then a horizontal top run that sinks into
+// the wall just under the rim. Both end anchors bury into the wall; the
+// cavity cut trims the buried inner end flush. The lift-off and flare run
+// stay <=45 deg (support-free); the horizontal top prints as a short
+// bridge.
 handles_on        = true;        // true = add the two opposite handles
 handle_t          = ref * 0.10;  // square bar side (cross-section handle_t^2)
 handle_low_t      = 0.12;        // lower attach as a t-fraction up the flare
@@ -81,6 +81,10 @@ handle_out        = ref * 0.18;  // flare: outer corner radius past the bowl wal
 handle_rise_lead  = 0.30;        // steep start: fraction of the total rise spent
                                  // lifting off near-vertical before the flare
                                  // run begins (higher = more vertical lift-off)
+handle_corner_r   = ref * 0.08;  // fillet radius rounding the flare-to-top
+                                 // corner (flare stays straight, then arcs
+                                 // into the horizontal top run)
+handle_arc_steps  = 16;          // segments in the rounded corner arc
 handle_bridge_max = 45;          // mm, max horizontal top span (FDM bridge limit)
 
 // 2. Derived dimensions
@@ -117,7 +121,7 @@ assert(rim_flare_h >= 0 && rim_flare_h <= rim_h, "rim_flare_h must be between 0 
 //   Waypoints (X = radius, Z = height):
 //     p0  low anchor    — buried in the flare wall near the stem
 //     p1  lift-off knee — top of the steep near-vertical lift-off
-//     p2  outer corner  — the flared-out high point
+//     p2  outer corner  — virtual sharp corner; the path arcs around it
 //     p3  top anchor    — buried in the bowl wall just under the rim,
 //                         level with p2 so the top run is horizontal
 handle_low_z  = stem_h + flare_h * handle_low_t;
@@ -127,14 +131,32 @@ handle_span   = handle_high_z - handle_low_z;     // total rise of the handle
 
 handle_p0 = [handle_low_r - handle_inset, handle_low_z];
 handle_p1 = [handle_low_r + handle_t / 2, handle_low_z + handle_span * handle_rise_lead];
-handle_p2 = [bowl_r + handle_out,         handle_high_z];
+handle_p2 = [bowl_r + handle_out,         handle_high_z];   // virtual sharp corner
 handle_p3 = [bowl_r - handle_inset,       handle_high_z];
 
-handle_path = [handle_p0, handle_p1, handle_p2, handle_p3];
+//   Rounded outer corner: the flare runs straight up to a tangent point,
+//   a circular arc of `handle_corner_r` curves it from the flare angle
+//   into the horizontal, then the level top run continues to the anchor.
+handle_flare_v   = handle_p2 - handle_p1;                       // flare vector
+handle_flare_len = sqrt(handle_flare_v[0] * handle_flare_v[0]
+                      + handle_flare_v[1] * handle_flare_v[1]);
+handle_u         = handle_flare_v / handle_flare_len;           // unit flare dir
+handle_setback   = handle_corner_r * handle_u[1] / (1 - handle_u[0]);
+
+handle_arc_ctr   = [handle_p2[0] - handle_setback,
+                    handle_p2[1] - handle_corner_r];            // arc centre
+handle_arc_a0    = atan2(handle_corner_r * -handle_u[0],
+                         handle_corner_r *  handle_u[1]);       // flare tangent pt
+
+handle_arc = [ for (i = [0 : handle_arc_steps])
+    let (a = handle_arc_a0 + (90 - handle_arc_a0) * i / handle_arc_steps)
+    handle_arc_ctr + handle_corner_r * [cos(a), sin(a)] ];
+
+handle_path = concat([handle_p0, handle_p1], handle_arc, [handle_p3]);
 
 //   Per-segment slope checks: lift-off (p0->p1) and flare run (p1->p2)
 //   must stay <=45 deg from vertical (support-free); the horizontal top
-//   run (p2->p3) is a bridge, length-limited instead.
+//   run is a bridge, length-limited instead.
 handle_liftoff_slope = (handle_p1[0] - handle_p0[0]) / (handle_p1[1] - handle_p0[1]);
 handle_flare_slope   = (handle_p2[0] - handle_p1[0]) / (handle_p2[1] - handle_p1[1]);
 handle_bridge_len    = handle_p2[0] - handle_p3[0];
@@ -151,6 +173,10 @@ assert(!handles_on || abs(handle_liftoff_slope) <= 1,
        "handle lift-off overhangs steeper than 45 deg (not support-free): raise handle_rise_lead");
 assert(!handles_on || abs(handle_flare_slope) <= 1,
        "handle flare overhangs steeper than 45 deg (not support-free): reduce handle_out or handle_rise_lead");
+assert(!handles_on || handle_setback < handle_flare_len,
+       "handle corner fillet too big: handle_corner_r exceeds the flare run length");
+assert(!handles_on || handle_setback < handle_bridge_len,
+       "handle corner fillet too big: handle_corner_r exceeds the top run length");
 assert(!handles_on || handle_bridge_len > 0,
        "handle does not flare past its top anchor: increase handle_out");
 assert(!handles_on || handle_bridge_len <= handle_bridge_max,
