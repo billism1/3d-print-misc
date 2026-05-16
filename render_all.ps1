@@ -34,14 +34,29 @@ if ($scadFiles.Count -eq 0) {
     return
 }
 
-$failed = 0
+# Build the render jobs. Default: one STL per .scad, named after the file.
+# Some files render multiple variants by overriding parameters with -D.
+$jobs = @()
 foreach ($scad in $scadFiles) {
-    $stl = Join-Path $outDir ($scad.BaseName + '.stl')
-    Write-Host "Rendering $($scad.Name) -> publication\$($scad.BaseName).stl"
+    if ($scad.Name -eq 'beer_can_koozy_negative.scad') {
+        # Negative-only (as the file stands) and the basic koozy body variant.
+        $jobs += @{ Src = $scad; Out = 'beer_can_koozy_negative.stl';
+                    Defs = @('-D', 'show_koozy=false') }
+        $jobs += @{ Src = $scad; Out = 'beer_can_koozy_example_basic.stl';
+                    Defs = @('-D', 'show_koozy=true') }
+    } else {
+        $jobs += @{ Src = $scad; Out = ($scad.BaseName + '.stl'); Defs = @() }
+    }
+}
+
+$failed = 0
+foreach ($job in $jobs) {
+    $stl = Join-Path $outDir $job.Out
+    Write-Host "Rendering $($job.Src.Name) -> publication\$($job.Out)"
 
     $errFile = [System.IO.Path]::GetTempFileName()
     $proc = Start-Process -FilePath $openscad `
-        -ArgumentList @('-o', $stl, $scad.FullName) `
+        -ArgumentList ($job.Defs + @('-o', $stl, $job.Src.FullName)) `
         -NoNewWindow -Wait -PassThru -RedirectStandardError $errFile
 
     if ($proc.ExitCode -ne 0) {
@@ -56,8 +71,8 @@ foreach ($scad in $scadFiles) {
 
 Write-Host ''
 if ($failed -gt 0) {
-    Write-Host "$failed of $($scadFiles.Count) file(s) failed to render." -ForegroundColor Red
+    Write-Host "$failed of $($jobs.Count) render(s) failed." -ForegroundColor Red
     exit 1
 } else {
-    Write-Host "All $($scadFiles.Count) file(s) rendered to publication\." -ForegroundColor Green
+    Write-Host "All $($jobs.Count) render(s) written to publication\." -ForegroundColor Green
 }
