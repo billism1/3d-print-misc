@@ -81,9 +81,11 @@ handle_out        = ref * 0.18;  // flare: outer corner radius past the bowl wal
 handle_rise_lead  = 0.30;        // steep start: fraction of the total rise spent
                                  // lifting off near-vertical before the flare
                                  // run begins (higher = more vertical lift-off)
-handle_corner_r   = ref * 0.08;  // fillet radius rounding the flare-to-top
+handle_corner_r   = ref * 0.045; // fillet radius rounding the flare-to-top
                                  // corner (flare stays straight, then arcs
-                                 // into the horizontal top run)
+                                 // into the horizontal top run). Small keeps
+                                 // the flare running at its angle near to the
+                                 // top; large adds a near-vertical stretch.
 handle_arc_steps  = 16;          // segments in the rounded corner arc
 handle_bridge_max = 45;          // mm, max horizontal top span (FDM bridge limit)
 
