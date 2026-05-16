@@ -15,7 +15,7 @@ total_height = 27.5;  // mm
 ogee_h       = 10;  // mm, height of the bottom S-curve
 ogee_inset   = 7;   // mm each side pulls in across the ogee
 
-riser_h      = 10;  // mm, straight vertical shaft above the ogee
+riser_h      = 10;  // mm, straight vertical shaft above the ogee. There is where any text or logo would be engraved, so this section is taller than the original.
 
 top1_h       = 4.5; // mm, first (larger) convex top molding height
 top1_inset   = 4.5; // mm each side pulls in across that molding
