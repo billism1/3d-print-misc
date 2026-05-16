@@ -74,6 +74,8 @@ cup_steps   = 64;           // segments per curved profile section
 // bridge.
 handles_on        = true;        // true = add the two opposite handles
 handle_t          = ref * 0.10;  // square bar side (cross-section handle_t^2)
+handle_edge_r     = handle_t * 0.2; // round-over on the bar's lengthwise edges
+handle_edge_fn    = 32;          // $fn for the rounded-edge geometry
 handle_low_t      = 0.12;        // lower attach as a t-fraction up the flare
                                  // (0 = stem top, 1 = top of flare)
 handle_inset      = ref * 0.08;  // how far each end sinks into the bowl wall
@@ -163,6 +165,8 @@ handle_liftoff_slope = (handle_p1[0] - handle_p0[0]) / (handle_p1[1] - handle_p0
 handle_flare_slope   = (handle_p2[0] - handle_p1[0]) / (handle_p2[1] - handle_p1[1]);
 handle_bridge_len    = handle_p2[0] - handle_p3[0];
 
+assert(!handles_on || (handle_edge_r > 0 && handle_edge_r <= handle_t / 2),
+       "handle_edge_r must be between 0 and handle_t/2");
 assert(!handles_on || (handle_low_t > 0 && handle_low_t < 1),
        "handle_low_t must be between 0 and 1");
 assert(!handles_on || handle_span > handle_t,
@@ -226,18 +230,24 @@ cavity_profile = concat(
     [ [inner_r, cav_top], [0, cav_top] ]         // straight cylinder -> open top
 );
 
-// 3b. Handle module — one handle swept along the 3-segment `handle_path`
-//     as a solid square bar; trophy_handles() places and mirrors the
-//     opposite pair. Each segment is the hull of two axis-aligned cubes,
-//     giving flat faces (square cross-section, not a round tube): a steep
-//     lift-off, a straight diagonal flare, and a horizontal top run.
+// 3b. Handle module — one handle swept along the 3-segment `handle_path`;
+//     trophy_handles() places and mirrors the opposite pair. Each node is
+//     a rounded cube (a square `handle_t` bar with its lengthwise edges
+//     softened by `handle_edge_r`); hulling consecutive nodes sweeps the
+//     bar: a steep lift-off, a straight diagonal flare, a horizontal top.
+module handle_node(p) {
+    translate([p[0], 0, p[1]])
+        hull()
+            for (x = [-1, 1], y = [-1, 1], z = [-1, 1])
+                translate([x, y, z] * (handle_t / 2 - handle_edge_r))
+                    sphere(r = handle_edge_r, $fn = handle_edge_fn);
+}
+
 module trophy_handle() {
     for (i = [0 : len(handle_path) - 2])
         hull() {
-            translate([handle_path[i][0], 0, handle_path[i][1]])
-                cube(handle_t, center = true);
-            translate([handle_path[i + 1][0], 0, handle_path[i + 1][1]])
-                cube(handle_t, center = true);
+            handle_node(handle_path[i]);
+            handle_node(handle_path[i + 1]);
         }
 }
 
