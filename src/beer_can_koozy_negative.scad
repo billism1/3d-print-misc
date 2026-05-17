@@ -26,6 +26,27 @@ cutout_d = can_od + 2 * radial_clearance;
 cutout_h = can_h  + bottom_clearance;
 koozy_od = cutout_d + 2 * wall;
 
+// ── Console Output ─────────────────────────────────────────────────────────────
+echo("Input parameters:");
+echo("  show_koozy", show_koozy);
+echo("  can_od", can_od);
+echo("  can_h", can_h);
+echo("  radial_clearance", radial_clearance);
+echo("  bottom_clearance", bottom_clearance);
+echo("  dome_d", dome_d);
+echo("  dome_h", dome_h);
+echo("  bottom_fillet_r", bottom_fillet_r);
+echo("  wall", wall);
+echo("  koozy_h", koozy_h);
+echo("  outer_fillet_r", outer_fillet_r);
+echo("  bottom_hole_d", bottom_hole_d);
+echo("  $fn", $fn);
+
+echo("Derived parameters:");
+echo("  cutout_d", cutout_d);
+echo("  cutout_h", cutout_h);
+echo("  koozy_od", koozy_od);
+
 assert(radial_clearance >= 0.2,          "radial_clearance too tight – can won't insert");
 assert(dome_d < cutout_d,                "dome_d must be smaller than cutout_d");
 assert(bottom_fillet_r < cutout_d / 2,  "bottom_fillet_r must be smaller than bore radius");
